@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
@@ -9,8 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Identity.Web.Resource;
-
-using B2CAuthZ.Admin;
 
 namespace B2CAuthZ.Admin.WebApiHost.Controllers
 {
@@ -46,9 +42,21 @@ namespace B2CAuthZ.Admin.WebApiHost.Controllers
         [Route("servicePrincipals/{resourceId:guid}/appRoleAssignedTo")]
         public async Task<IEnumerable<AppRoleAssignment>> GetApplicationAppRoleAssignments(Guid resourceId) => await _appsRepo.GetAppRoleAssignmentsByResource(resourceId);
 
+        [HttpDelete]
+        [Route("servicePrincipals/{resourceId:guid}/appRoleAssignedTo/{appRoleAssignmentId}")]
+        public async Task<IActionResult> DeleteApplicationAppRoleAssignment(Guid resourceId, string appRoleAssignmentId)
+        {
+            var deletion = await _appsRepo.DeleteAppRoleAssignmentByResource(resourceId, appRoleAssignmentId);
+            if (deletion)
+            {
+                return new NoContentResult();
+            }
+            return new UnauthorizedResult();
+        }
+
         [HttpPost]
         [Route("servicePrincipals/{resourceId:guid}/appRoleAssignedTo")]
-        public async Task<AppRoleAssignment> AddApplicationRoleAssignment(Guid resourceId, [FromBody] Microsoft.Graph.AppRoleAssignment request)
+        public async Task<AppRoleAssignment> AddApplicationRoleAssignment(Guid resourceId, [FromBody] AppRoleAssignment request)
         {
             request.ResourceId = resourceId;
             return await _appsRepo.AssignAppRole(request);
